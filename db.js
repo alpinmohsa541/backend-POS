@@ -1,19 +1,20 @@
 const mysql = require("mysql2");
 
-// Konfigurasi koneksi database
+// Konfigurasi koneksi database untuk XAMPP
 const db = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "", // Ubah jika ada password
-  database: "pos_sederhana", // Nama database
+  host: "localhost", // Host default XAMPP
+  user: "root", // User default XAMPP
+  password: "", // Password default XAMPP (kosong)
+  database: "pos-sederhana", // Nama database
+  port: 3306, // Port default MySQL di XAMPP
 });
 
-// Test koneksi
+// Tes koneksi
 db.connect((err) => {
   if (err) {
     console.error("Database connection failed:", err);
   } else {
-    console.log("Connected to MySQL Database.");
+    console.log("Connected to MySQL Database on XAMPP.");
   }
 });
 
