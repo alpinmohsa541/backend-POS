@@ -16,11 +16,12 @@ app.use("/transaction-items", require("./routes/transactionItemRoutes"));
 app.use("/menus", require("./routes/menuRoutes"));
 app.use("/users", require("./routes/userRoutes"));
 app.use("/settings", require("./routes/settingRoutes"));
-app.use(cors());
+app.use("/api", require("./routes/registerRoutes")); // Register route
 
 // Tambahkan rute login
 app.use("/api", require("./routes/loginRoutes")); // Rute untuk login API
 app.use(bodyParser.json()); // Untuk memproses JSON
+app.use("/menus", require("./routes/menuRoutes"));
 
 // Default route
 app.get("/", (req, res) => {
