@@ -32,12 +32,10 @@ router.post("/", (req, res) => {
         console.error("Database error (add menu):", err);
         return res.status(500).json({ message: "Failed to add menu" });
       }
-      res
-        .status(201)
-        .json({
-          message: "Menu added successfully",
-          menu_id: results.insertId,
-        });
+      res.status(201).json({
+        message: "Menu added successfully",
+        menu_id: results.insertId,
+      });
     }
   );
 });
