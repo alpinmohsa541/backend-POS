@@ -4,6 +4,7 @@ const cors = require("cors");
 const db = require("./db");
 const menuRoutes = require("./routes/menuRoutes");
 const path = require("path");
+require("dotenv").config();
 
 const app = express();
 const PORT = 3000;
@@ -26,7 +27,7 @@ app.use("/menus", require("./routes/menuRoutes")); // Rute untuk menu (termasuk 
 app.use("/users", require("./routes/userRoutes")); // Rute untuk pengguna
 app.use("/settings", require("./routes/settingRoutes")); // Rute untuk pengaturan
 app.use("/api", require("./routes/registerRoutes")); // Rute untuk pendaftaran
-app.use(cors());
+
 // Route setup
 app.use("/api/menus", menuRoutes); // Gunakan API prefix yang sesuai
 app.use("/uploads", express.static("uploads")); // Serve images from uploads directory
