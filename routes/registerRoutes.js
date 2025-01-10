@@ -1,9 +1,20 @@
 const express = require("express");
 const router = express.Router();
-const db = require("../db"); // Koneksi database
+const mongoose = require("mongoose");
+
+// Definisikan schema untuk user
+const userSchema = new mongoose.Schema({
+  username: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  name: { type: String, required: true },
+  role: { type: String, required: true },
+});
+
+// Buat model untuk user
+const User = mongoose.model("User", userSchema);
 
 // API untuk register user baru
-router.post("/register", (req, res) => {
+router.post("/register", async (req, res) => {
   const { username, password, name, role } = req.body;
 
   // Validasi input
@@ -11,33 +22,26 @@ router.post("/register", (req, res) => {
     return res.status(400).json({ message: "All fields are required" });
   }
 
-  // Periksa apakah username sudah digunakan
-  const checkQuery = `SELECT * FROM user WHERE username = ?`;
-  db.query(checkQuery, [username], (err, results) => {
-    if (err) {
-      console.error("Database error (check username):", err);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-
-    if (results.length > 0) {
+  try {
+    // Periksa apakah username sudah digunakan
+    const existingUser = await User.findOne({ username });
+    if (existingUser) {
       return res.status(409).json({ message: "Username is already taken" });
     }
 
-    // Tambahkan user ke database (user_id diisi otomatis)
-    const insertQuery = `INSERT INTO user (username, password, name, role) VALUES (?, ?, ?, ?)`;
-    db.query(insertQuery, [username, password, name, role], (err, results) => {
-      if (err) {
-        console.error("Database error (insert user):", err);
-        return res.status(500).json({ message: "Failed to register user" });
-      }
+    // Tambahkan user baru ke database
+    const newUser = new User({ username, password, name, role });
+    const savedUser = await newUser.save();
 
-      console.log("User registered with ID:", results.insertId);
-      res.status(201).json({
-        message: "User registered successfully",
-        user_id: results.insertId, // ID yang dihasilkan oleh database
-      });
+    console.log("User registered with ID:", savedUser._id);
+    res.status(201).json({
+      message: "User registered successfully",
+      user_id: savedUser._id, // ID yang dihasilkan oleh MongoDB
     });
-  });
+  } catch (err) {
+    console.error("Database error (register user):", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
 });
 
 module.exports = router;

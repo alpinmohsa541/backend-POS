@@ -1,23 +1,15 @@
-const { Pool } = require("pg");
+const mongoose = require("mongoose");
 
-// Konfigurasi koneksi ke database
-const pool = new Pool({
-  connectionString:
-    process.env.DATABASE_URL ||
-    "postgres://neondb_owner:WxfERYg4y7li@ep-billowing-darkness-a1kypg66-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require",
-  ssl: {
-    rejectUnauthorized: false, // Pastikan SSL diizinkan
-  },
-});
+// Konfigurasi koneksi ke MongoDB
+const MONGO_URI =
+  process.env.MONGO_URI ||
+  "mongodb+srv://admin:admin@pos-sederhana.jtuq3.mongodb.net/pos-sederhana?retryWrites=true&w=majority";
 
-// Fungsi untuk menguji koneksi
-pool.connect((err, client, release) => {
-  if (err) {
-    return console.error("Error acquiring client", err.stack);
-  }
-  console.log("Connected to PostgreSQL database successfully!");
-  release(); // Kembalikan client ke pool
-});
+// Fungsi untuk koneksi MongoDB
+mongoose
+  .connect(MONGO_URI) // Gunakan variabel MONGO_URI
+  .then(() => console.log("Connected to MongoDB"))
+  .catch((err) => console.error("Failed to connect to MongoDB:", err));
 
-// Ekspor pool untuk digunakan di file lain
-module.exports = pool;
+// Ekspor mongoose untuk digunakan di file lain
+module.exports = mongoose;

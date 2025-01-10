@@ -1,43 +1,55 @@
 const express = require("express");
+const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const cors = require("cors");
-const db = require("./db");
-const menuRoutes = require("./routes/menuRoutes");
 const path = require("path");
 require("dotenv").config();
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
+
+// Validasi MONGO_URI
+if (!process.env.MONGO_URI) {
+  console.error("MONGO_URI is not defined in the environment variables.");
+  process.exit(1);
+}
 
 // Middleware
-app.use(cors()); // Mengaktifkan CORS
-app.use(bodyParser.json()); // Untuk parsing body request dalam format JSON
+app.use(cors());
+app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-
-// Menyiapkan direktori statis untuk menyimpan gambar yang diunggah
-// app.use(express.static("assets"));
-
-// Serve static files from the 'assets' directory
-app.use("/assets", express.static("assets"));
 app.use("/assets", express.static(path.join(__dirname, "assets")));
+app.use("/uploads", express.static("uploads"));
+
+// Koneksi ke MongoDB
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => console.log("Connected to MongoDB"))
+  .catch((err) => {
+    console.error("Error connecting to MongoDB:", err);
+    process.exit(1);
+  });
+
 // Routes
-app.use("/transaction-groups", require("./routes/transactionGroupRoutes")); // Rute untuk kelompok transaksi
-app.use("/transaction-items", require("./routes/transactionItemRoutes")); // Rute untuk item transaksi
-app.use("/menus", require("./routes/menuRoutes")); // Rute untuk menu (termasuk fungsi unggah gambar)
-app.use("/users", require("./routes/userRoutes")); // Rute untuk pengguna
-app.use("/settings", require("./routes/settingRoutes")); // Rute untuk pengaturan
-app.use("/api", require("./routes/registerRoutes")); // Rute untuk pendaftaran
-
-// Route setup
-app.use("/api/menus", menuRoutes); // Gunakan API prefix yang sesuai
-app.use("/uploads", express.static("uploads")); // Serve images from uploads directory
-
-// Tambahkan rute login
-app.use("/api", require("./routes/loginRoutes")); // Rute untuk login API
+app.use("/transaction-groups", require("./routes/transactionGroupRoutes"));
+app.use("/transaction-items", require("./routes/transactionItemRoutes"));
+app.use("/menus", require("./routes/menuRoutes"));
+app.use("/users", require("./routes/userRoutes"));
+app.use("/settings", require("./routes/settingRoutes"));
+app.use("/api", require("./routes/registerRoutes"));
+app.use("/api", require("./routes/loginRoutes"));
 
 // Default route
 app.get("/", (req, res) => {
   res.send("POS Backend is running...");
+});
+
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res
+    .status(500)
+    .json({ message: "Internal Server Error", error: err.message });
 });
 
 // Start server

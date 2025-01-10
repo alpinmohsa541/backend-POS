@@ -1,30 +1,70 @@
 const express = require("express");
 const router = express.Router();
-const db = require("../db");
+const mongoose = require("mongoose");
 
-// Get all transaction items
-router.get("/", (req, res) => {
-  db.query("SELECT * FROM transaction_item", (err, results) => {
-    if (err) return res.status(500).json(err);
-    res.json(results);
-  });
+// Definisikan schema untuk transaction item
+const transactionItemSchema = new mongoose.Schema({
+  transaction_group_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    ref: "TransactionGroup",
+  }, // Referensi ke group transaksi
+  menu_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    ref: "Menu",
+  }, // Referensi ke menu
+  quantity: { type: Number, required: true }, // Jumlah item
+  subtotal: { type: Number, required: true }, // Subtotal transaksi
+  created_at: { type: Date, default: Date.now }, // Waktu pembuatan
 });
 
-// Create new transaction item
-router.post("/", (req, res) => {
+// Buat model untuk transaction item
+const TransactionItem = mongoose.model(
+  "TransactionItem",
+  transactionItemSchema
+);
+
+// API untuk mendapatkan semua transaction items
+router.get("/", async (req, res) => {
+  try {
+    const transactionItems = await TransactionItem.find()
+      .populate("transaction_group_id") // Opsional: Populate data dari TransactionGroup
+      .populate("menu_id"); // Opsional: Populate data dari Menu
+    res.json(transactionItems);
+  } catch (err) {
+    console.error("Database error (fetch transaction items):", err);
+    res.status(500).json({ message: "Failed to fetch transaction items" });
+  }
+});
+
+// API untuk membuat transaction item baru
+router.post("/", async (req, res) => {
   const { transaction_group_id, menu_id, quantity, subtotal } = req.body;
-  const query = `INSERT INTO transaction_item (transaction_group_id, menu_id, quantity, subtotal) VALUES (?, ?, ?, ?)`;
-  db.query(
-    query,
-    [transaction_group_id, menu_id, quantity, subtotal],
-    (err, results) => {
-      if (err) return res.status(500).json(err);
-      res.json({
-        message: "Transaction item created successfully.",
-        id: results.insertId,
-      });
+
+  try {
+    // Validasi input
+    if (!transaction_group_id || !menu_id || !quantity || !subtotal) {
+      return res.status(400).json({ message: "All fields are required" });
     }
-  );
+
+    // Buat transaction item baru
+    const newTransactionItem = new TransactionItem({
+      transaction_group_id,
+      menu_id,
+      quantity,
+      subtotal,
+    });
+
+    const savedTransactionItem = await newTransactionItem.save();
+    res.status(201).json({
+      message: "Transaction item created successfully.",
+      id: savedTransactionItem._id,
+    });
+  } catch (err) {
+    console.error("Database error (create transaction item):", err);
+    res.status(500).json({ message: "Failed to create transaction item" });
+  }
 });
 
 module.exports = router;
