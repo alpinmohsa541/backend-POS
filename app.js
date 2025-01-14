@@ -23,26 +23,25 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Koneksi ke MongoDB tanpa opsi deprecated
 mongoose
-  .connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
+  .connect(process.env.MONGO_URI)
   .then(() => console.log("Connected to MongoDB"))
   .catch((err) => {
     console.error("Error connecting to MongoDB:", err);
     process.exit(1);
   });
 
-// Routes
+// Routes dengan prefix /api
 try {
-  // Pastikan semua route menggunakan model yang sudah didefinisikan di folder 'models'
-  app.use("/transaction-groups", require("./routes/transactionGroupRoutes"));
-  app.use("/transaction-items", require("./routes/transactionItemRoutes"));
-  app.use("/menus", require("./routes/menuRoutes"));
-  app.use("/users", require("./routes/userRoutes"));
-  app.use("/settings", require("./routes/settingRoutes"));
-  app.use("/register", require("./routes/registerRoutes"));
-  app.use("/login", require("./routes/loginRoutes"));
+  app.use(
+    "/api/transaction-groups",
+    require("./routes/transactionGroupRoutes")
+  );
+  app.use("/api/transaction-items", require("./routes/transactionItemRoutes"));
+  app.use("/api/menus", require("./routes/menuRoutes"));
+  app.use("/api/users", require("./routes/userRoutes"));
+  app.use("/api/settings", require("./routes/settingRoutes"));
+  app.use("/api/register", require("./routes/registerRoutes"));
+  app.use("/api/login", require("./routes/loginRoutes"));
 } catch (err) {
   console.error("Error loading routes:", err.message);
   process.exit(1);
