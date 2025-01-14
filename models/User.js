@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs"); // Import bcrypt
 
-// Definisikan schema untuk user
 const userSchema = new mongoose.Schema({
   role: { type: String, required: true }, // Peran pengguna (admin/user)
   name: { type: String, required: true }, // Nama pengguna
@@ -13,7 +13,15 @@ const userSchema = new mongoose.Schema({
   updated_at: { type: Date, default: Date.now }, // Tanggal update terakhir
 });
 
-// Gunakan `mongoose.models` untuk mencegah overwrite model
+// Fungsi untuk melakukan hashing password sebelum disimpan
+userSchema.pre("save", async function (next) {
+  if (this.isModified("password")) {
+    const hashedPassword = await bcrypt.hash(this.password, 10);
+    this.password = hashedPassword;
+  }
+  next();
+});
+
 const User = mongoose.models.User || mongoose.model("User", userSchema);
 
 module.exports = User;

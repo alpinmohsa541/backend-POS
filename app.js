@@ -38,8 +38,8 @@ try {
   app.use("/menus", require("./routes/menuRoutes"));
   app.use("/users", require("./routes/userRoutes"));
   app.use("/settings", require("./routes/settingRoutes"));
-  app.use("/api/register", require("./routes/registerRoutes"));
-  app.use("/api/login", require("./routes/loginRoutes"));
+  app.use("/register", require("./routes/registerRoutes"));
+  app.use("/login", require("./routes/loginRoutes"));
 } catch (err) {
   console.error("Error loading routes:", err.message);
   process.exit(1);
