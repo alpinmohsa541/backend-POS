@@ -1,27 +1,35 @@
 const express = require("express");
+const bcrypt = require("bcryptjs"); // Tambahkan bcrypt
 const router = express.Router();
-const db = require("../db"); // Koneksi ke database
+const User = require("../models/User"); // Impor model User
 
 // Login API
-router.post("/login", (req, res) => {
+router.post("/", async (req, res) => {
   const { username, password } = req.body;
 
-  // Validasi login dengan query database
-  const query = `SELECT * FROM user WHERE username = ? AND password = ?`;
-  db.query(query, [username, password], (err, results) => {
-    if (err)
-      return res.status(500).json({ message: "Database error", error: err });
+  try {
+    // Mencari user berdasarkan username
+    const user = await User.findOne({ username });
 
-    if (results.length > 0) {
-      const user = results[0];
-      res.json({
-        name: user.name,
-        role: user.role,
-      });
+    if (user) {
+      // Verifikasi password menggunakan bcrypt
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+
+      if (isPasswordValid) {
+        // Password valid, kirimkan response dengan data user
+        res.json({
+          name: user.name,
+          role: user.role,
+        });
+      } else {
+        res.status(401).json({ message: "Invalid username or password" });
+      }
     } else {
       res.status(401).json({ message: "Invalid username or password" });
     }
-  });
+  } catch (err) {
+    res.status(500).json({ message: "Database error", error: err.message });
+  }
 });
 
 module.exports = router;

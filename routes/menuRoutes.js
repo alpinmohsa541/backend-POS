@@ -1,22 +1,34 @@
 const express = require("express");
 const router = express.Router();
-const db = require("../db"); // Koneksi database
 const upload = require("../uploadConfig"); // Konfigurasi multer
+const mongoose = require("mongoose");
+
+// Definisikan schema untuk menu
+const menuSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  category: { type: String, required: true },
+  price: { type: Number, required: true },
+  description: { type: String, required: true },
+  image: { type: String, default: "/assets/default-image.jpg" }, // Path gambar
+  is_deleted: { type: Boolean, default: false },
+});
+
+// Buat model untuk menu
+const Menu = mongoose.model("Menu", menuSchema);
 
 // API untuk mendapatkan daftar menu
-router.get("/", (req, res) => {
-  const query = `SELECT * FROM menu WHERE is_deleted = 0`;
-  db.query(query, (err, results) => {
-    if (err) {
-      console.error("Database error (fetch menus):", err);
-      return res.status(500).json({ message: "Failed to fetch menus" });
-    }
-    res.json(results);
-  });
+router.get("/", async (req, res) => {
+  try {
+    const menus = await Menu.find({ is_deleted: false }); // Hanya menu yang tidak dihapus
+    res.json(menus);
+  } catch (err) {
+    console.error("Database error (fetch menus):", err);
+    res.status(500).json({ message: "Failed to fetch menus" });
+  }
 });
 
 // API untuk menambahkan menu baru dengan gambar
-router.post("/", upload.single("image"), (req, res) => {
+router.post("/", upload.single("image"), async (req, res) => {
   const { name, category, price, description } = req.body;
   const imagePath = req.file
     ? `/assets/${req.file.filename}` // Memastikan path ini sesuai dengan URL akses
@@ -26,92 +38,94 @@ router.post("/", upload.single("image"), (req, res) => {
     return res.status(400).json({ message: "All fields are required" });
   }
 
-  const query = `INSERT INTO menu (name, category, price, description, image, is_deleted) VALUES (?, ?, ?, ?, ?, 0)`;
-  db.query(
-    query,
-    [name, category, price, description, imagePath],
-    (err, results) => {
-      if (err) {
-        console.error("Database error (add menu):", err);
-        return res.status(500).json({ message: "Failed to add menu" });
-      }
-      res.status(201).json({
-        message: "Menu added successfully",
-        menu_id: results.insertId,
-      });
-    }
-  );
+  try {
+    const newMenu = new Menu({
+      name,
+      category,
+      price,
+      description,
+      image: imagePath,
+    });
+
+    const savedMenu = await newMenu.save();
+    res.status(201).json({
+      message: "Menu added successfully",
+      menu_id: savedMenu._id,
+    });
+  } catch (err) {
+    console.error("Database error (add menu):", err);
+    res.status(500).json({ message: "Failed to add menu" });
+  }
 });
 
-// API untuk menghapus menu (mengubah status is_deleted menjadi 1)
-router.delete("/:id", (req, res) => {
+// API untuk menghapus menu (mengubah status is_deleted menjadi true)
+router.delete("/:id", async (req, res) => {
   const { id } = req.params; // Mengambil menu_id dari parameter URL
-  const query = `UPDATE menu SET is_deleted = 1 WHERE menu_id = ?`; // Memperbarui kolom is_deleted menjadi 1
-  db.query(query, [id], (err, results) => {
-    if (err) {
-      console.error("Database error (delete menu):", err);
-      return res.status(500).json({ message: "Failed to delete menu" });
-    }
+  try {
+    const deletedMenu = await Menu.findByIdAndUpdate(
+      id,
+      { is_deleted: true }, // Mengubah status is_deleted menjadi true
+      { new: true } // Mengembalikan data yang telah diperbarui
+    );
 
-    // Jika tidak ada baris yang terpengaruh (menu tidak ditemukan)
-    if (results.affectedRows === 0) {
+    if (!deletedMenu) {
       return res.status(404).json({ message: "Menu not found" });
     }
 
-    // Mengembalikan status 200 OK jika penghapusan berhasil
     res.status(200).json({ message: "Menu deleted successfully" });
-  });
+  } catch (err) {
+    console.error("Database error (delete menu):", err);
+    res.status(500).json({ message: "Failed to delete menu" });
+  }
 });
 
 // API untuk mengedit menu berdasarkan menu_id
-router.put("/:id", upload.single("image"), (req, res) => {
+router.put("/:id", upload.single("image"), async (req, res) => {
   const { id } = req.params; // Mengambil menu_id dari parameter URL
-  const { name, category, price, description } = req.body; // Mengambil data baru dari body request
+  const { name, category, price, description } = req.body;
 
   // Menentukan path gambar baru jika ada
   const imagePath = req.file
     ? `/assets/${req.file.filename}` // Memastikan path gambar sesuai dengan URL
-    : null;
+    : undefined;
 
   // Validasi input
   if (!name || !category || !price || !description) {
     return res.status(400).json({ message: "All fields are required" });
   }
 
-  // Query untuk memperbarui menu berdasarkan menu_id
-  const query = `
-    UPDATE menu
-    SET name = ?, category = ?, price = ?, description = ?, image = ?
-    WHERE menu_id = ? AND is_deleted = 0`; // Pastikan hanya mengupdate menu yang tidak dihapus
+  try {
+    const updatedMenu = await Menu.findByIdAndUpdate(
+      id,
+      {
+        name,
+        category,
+        price,
+        description,
+        ...(imagePath && { image: imagePath }), // Update image hanya jika tersedia
+      },
+      { new: true } // Mengembalikan data yang telah diperbarui
+    );
 
-  db.query(
-    query,
-    [name, category, price, description, imagePath, id],
-    (err, results) => {
-      if (err) {
-        console.error("Database error (update menu):", err);
-        return res.status(500).json({ message: "Failed to update menu" });
-      }
-
-      // Jika tidak ada baris yang terpengaruh (menu tidak ditemukan)
-      if (results.affectedRows === 0) {
-        return res.status(404).json({ message: "Menu not found" });
-      }
-
-      // Mengembalikan status 200 OK dengan data menu yang telah diperbarui
-      res.status(200).json({
-        message: "Menu updated successfully",
-        menu_id: id,
-        updatedFields: {
-          name,
-          category,
-          price,
-          description,
-          image: imagePath || null,
-        },
-      });
+    if (!updatedMenu) {
+      return res.status(404).json({ message: "Menu not found" });
     }
-  );
+
+    res.status(200).json({
+      message: "Menu updated successfully",
+      menu_id: updatedMenu._id,
+      updatedFields: {
+        name,
+        category,
+        price,
+        description,
+        image: updatedMenu.image,
+      },
+    });
+  } catch (err) {
+    console.error("Database error (update menu):", err);
+    res.status(500).json({ message: "Failed to update menu" });
+  }
 });
 
 module.exports = router;

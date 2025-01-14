@@ -1,43 +1,55 @@
 const express = require("express");
 const router = express.Router();
-const db = require("../db"); // Koneksi database
+const User = require("../models/User"); // Pastikan path relatif sudah benar
 
 // API untuk register user baru
-router.post("/register", (req, res) => {
-  const { username, password, name, role } = req.body;
+router.post("/", async (req, res) => {
+  // Perhatikan bahwa route yang dipakai adalah "/"
+  const { username, password, confirmPassword, name, email, role } = req.body;
 
-  // Validasi input
-  if (!username || !password || !name || !role) {
+  // Validasi untuk memastikan semua field yang diperlukan ada
+  if (!username || !password || !name || !role || !email) {
     return res.status(400).json({ message: "All fields are required" });
   }
 
-  // Periksa apakah username sudah digunakan
-  const checkQuery = `SELECT * FROM user WHERE username = ?`;
-  db.query(checkQuery, [username], (err, results) => {
-    if (err) {
-      console.error("Database error (check username):", err);
-      return res.status(500).json({ message: "Internal server error" });
+  // Pastikan password dan confirmPassword cocok
+  if (password !== confirmPassword) {
+    return res.status(400).json({ message: "Passwords do not match" });
+  }
+
+  try {
+    // Cek apakah username atau email sudah ada
+    const existingUser = await User.findOne({ $or: [{ username }, { email }] });
+    if (existingUser) {
+      return res
+        .status(409)
+        .json({ message: "Username or email is already taken" });
     }
 
-    if (results.length > 0) {
-      return res.status(409).json({ message: "Username is already taken" });
-    }
-
-    // Tambahkan user ke database (user_id diisi otomatis)
-    const insertQuery = `INSERT INTO user (username, password, name, role) VALUES (?, ?, ?, ?)`;
-    db.query(insertQuery, [username, password, name, role], (err, results) => {
-      if (err) {
-        console.error("Database error (insert user):", err);
-        return res.status(500).json({ message: "Failed to register user" });
-      }
-
-      console.log("User registered with ID:", results.insertId);
-      res.status(201).json({
-        message: "User registered successfully",
-        user_id: results.insertId, // ID yang dihasilkan oleh database
-      });
+    // Membuat user baru
+    const newUser = new User({
+      username,
+      password,
+      name,
+      email,
+      role,
+      status: "active", // Status default adalah active
+      language: "en", // Bahasa default adalah English
     });
-  });
+
+    // Simpan user ke database
+    const savedUser = await newUser.save();
+
+    res.status(201).json({
+      message: "User registered successfully",
+      user_id: savedUser._id,
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: "Internal server error",
+      error: err.message,
+    });
+  }
 });
 
 module.exports = router;
