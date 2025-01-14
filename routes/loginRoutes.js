@@ -1,13 +1,12 @@
 const express = require("express");
 const router = express.Router();
-const User = require("../models/User"); // Model MongoDB untuk user
+const User = require("../models/User"); // Impor model User
 
 // Login API
 router.post("/login", async (req, res) => {
   const { username, password } = req.body;
 
   try {
-    // Cari user di MongoDB berdasarkan username dan password
     const user = await User.findOne({ username, password });
 
     if (user) {
