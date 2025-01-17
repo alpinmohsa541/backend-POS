@@ -1,20 +1,19 @@
 const multer = require("multer");
 const path = require("path");
-const fs = require("fs"); // Membutuhkan fs module untuk memeriksa dan membuat direktori
+const fs = require("fs");
 
-// Membuat direktori jika belum ada
-const dir = "./assets/";
+// Gunakan direktori yang dapat ditulis
+const dir = "/tmp/assets/";
 if (!fs.existsSync(dir)) {
   fs.mkdirSync(dir, { recursive: true });
 }
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, dir); // Tentukan direktori tempat file di-upload
+    cb(null, dir); // Direktori yang dapat ditulis
   },
   filename: (req, file, cb) => {
-    // Gunakan nama file yang dikirim oleh client, atau buat nama unik berdasarkan waktu
-    const fileName = file.originalname.replace(/\s+/g, "_"); // Mengganti spasi dengan underscore
+    const fileName = file.originalname.replace(/\s+/g, "_");
     cb(null, `${Date.now()}-${fileName}`);
   },
 });
@@ -31,10 +30,10 @@ const upload = multer({
     if (mimetype && extname) {
       cb(null, true);
     } else {
-      cb("Error: Images Only!"); // Hanya menerima gambar
+      cb(new Error("Error: Images Only!"));
     }
   },
-  limits: { fileSize: 1000000 }, // Ukuran file maksimum 1 MB
+  limits: { fileSize: 1000000 },
 });
 
 module.exports = upload;
