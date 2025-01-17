@@ -1,20 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const upload = require("../uploadConfig"); // Konfigurasi multer
-const mongoose = require("mongoose");
-
-// Definisikan schema untuk menu
-const menuSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  category: { type: String, required: true },
-  price: { type: Number, required: true },
-  description: { type: String, required: true },
-  image: { type: String, default: "/assets/default-image.jpg" }, // Path gambar
-  is_deleted: { type: Boolean, default: false },
-});
-
-// Buat model untuk menu
-const Menu = mongoose.model("Menu", menuSchema);
+const upload = require("../uploadConfig"); // Import konfigurasi multer
+const Menu = require("../models/Menu"); // Mengimpor model Menu yang sudah ada
 
 // API untuk mendapatkan daftar menu
 router.get("/", async (req, res) => {
@@ -29,14 +16,23 @@ router.get("/", async (req, res) => {
 
 // API untuk menambahkan menu baru dengan gambar
 router.post("/", upload.single("image"), async (req, res) => {
-  const { name, category, price, description } = req.body;
-  const imagePath = req.file
-    ? `/assets/${req.file.filename}` // Memastikan path ini sesuai dengan URL akses
-    : "/assets/default-image.jpg";
+  if (req.fileValidationError) {
+    return res.status(400).json({ message: req.fileValidationError });
+  }
 
+  if (!req.file) {
+    return res.status(400).json({ message: "No file uploaded" });
+  }
+
+  const { name, category, price, description } = req.body;
+
+  // Validasi input
   if (!name || !category || !price || !description) {
     return res.status(400).json({ message: "All fields are required" });
   }
+
+  // Tentukan path gambar
+  const imagePath = `/assets/${req.file.filename}`;
 
   try {
     const newMenu = new Menu({
@@ -44,7 +40,7 @@ router.post("/", upload.single("image"), async (req, res) => {
       category,
       price,
       description,
-      image: imagePath,
+      image: imagePath, // Menyimpan path gambar ke database
     });
 
     const savedMenu = await newMenu.save();
@@ -54,7 +50,7 @@ router.post("/", upload.single("image"), async (req, res) => {
     });
   } catch (err) {
     console.error("Database error (add menu):", err);
-    res.status(500).json({ message: "Failed to add menu" });
+    res.status(500).json({ message: "Failed to add menu", error: err.message });
   }
 });
 
@@ -86,7 +82,7 @@ router.put("/:id", upload.single("image"), async (req, res) => {
 
   // Menentukan path gambar baru jika ada
   const imagePath = req.file
-    ? `/assets/${req.file.filename}` // Memastikan path gambar sesuai dengan URL
+    ? `/assets/${req.file.filename}` // Update image jika ada file baru
     : undefined;
 
   // Validasi input

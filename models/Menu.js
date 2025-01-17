@@ -21,8 +21,8 @@ const menuSchema = new mongoose.Schema(
     }, // Deskripsi menu, wajib diisi
     image: {
       type: String,
-      default: "/assets/default-image.jpg",
-    }, // Path gambar, default jika tidak ada gambar
+      default: "/assets/default-image.jpg", // Gambar default jika tidak ada
+    }, // Path gambar
     is_deleted: {
       type: Boolean,
       default: false,

@@ -10,13 +10,12 @@ if (!fs.existsSync(dir)) {
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, dir);
+    cb(null, dir); // Tentukan direktori tempat file di-upload
   },
   filename: (req, file, cb) => {
-    cb(
-      null,
-      file.fieldname + "-" + Date.now() + path.extname(file.originalname)
-    );
+    // Gunakan nama file yang dikirim oleh client, atau buat nama unik berdasarkan waktu
+    const fileName = file.originalname.replace(/\s+/g, "_"); // Mengganti spasi dengan underscore
+    cb(null, `${Date.now()}-${fileName}`);
   },
 });
 
@@ -32,10 +31,10 @@ const upload = multer({
     if (mimetype && extname) {
       cb(null, true);
     } else {
-      cb("Error: Images Only!");
+      cb("Error: Images Only!"); // Hanya menerima gambar
     }
   },
-  limits: { fileSize: 1000000 },
+  limits: { fileSize: 1000000 }, // Ukuran file maksimum 1 MB
 });
 
 module.exports = upload;
