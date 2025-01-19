@@ -3,7 +3,7 @@ const path = require("path");
 const fs = require("fs");
 
 // Gunakan direktori yang dapat ditulis
-const dir = "/tmp/assets/";
+const dir = "assets/";
 if (!fs.existsSync(dir)) {
   fs.mkdirSync(dir, { recursive: true });
 }
