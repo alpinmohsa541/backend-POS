@@ -6,7 +6,7 @@ const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
-    folder: "uploads", // Folder untuk menyimpan gambar di Cloudinary
+    folder: "assets", // Folder untuk menyimpan gambar di Cloudinary
     allowed_formats: ["jpg", "jpeg", "png", "gif"], // Format file yang diizinkan
   },
 });

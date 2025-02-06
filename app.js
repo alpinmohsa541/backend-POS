@@ -21,8 +21,8 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // Static file route untuk assets dan uploads
+// Menyajikan file yang ada di dalam folder 'assets' agar dapat diakses melalui URL /assets
 app.use("/assets", express.static(path.join(__dirname, "assets")));
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Koneksi ke MongoDB
 mongoose

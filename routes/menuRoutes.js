@@ -13,7 +13,6 @@ router.get("/", async (req, res) => {
     res.status(500).json({ message: "Failed to fetch menus" });
   }
 });
-
 // API untuk menambahkan menu baru dengan gambar
 router.post("/", upload.single("image"), async (req, res) => {
   if (req.fileValidationError) {
@@ -31,8 +30,8 @@ router.post("/", upload.single("image"), async (req, res) => {
     return res.status(400).json({ message: "All fields are required" });
   }
 
-  // Tentukan path gambar
-  const imagePath = `/assets/${req.file.filename}`;
+  // Mendapatkan URL gambar yang disimpan di Cloudinary
+  const imagePath = req.file.path; // Cloudinary URL disimpan di req.file.path
 
   try {
     const newMenu = new Menu({
@@ -40,13 +39,14 @@ router.post("/", upload.single("image"), async (req, res) => {
       category,
       price,
       description,
-      image: imagePath, // Menyimpan path gambar ke database
+      image: imagePath, // Menyimpan URL gambar Cloudinary ke database
     });
 
     const savedMenu = await newMenu.save();
     res.status(201).json({
       message: "Menu added successfully",
       menu_id: savedMenu._id,
+      image_url: imagePath, // Menampilkan URL gambar dari Cloudinary
     });
   } catch (err) {
     console.error("Database error (add menu):", err);
@@ -121,6 +121,32 @@ router.put("/:id", upload.single("image"), async (req, res) => {
   } catch (err) {
     console.error("Database error (update menu):", err);
     res.status(500).json({ message: "Failed to update menu" });
+  }
+});
+// API untuk mendapatkan menu berdasarkan ID
+router.get("/:id", async (req, res) => {
+  const { id } = req.params; // Mengambil menu_id dari parameter URL
+  try {
+    const menu = await Menu.findById(id); // Mencari menu berdasarkan ID
+
+    if (!menu) {
+      return res.status(404).json({ message: "Menu not found" });
+    }
+
+    // Mendapatkan URL gambar dari Cloudinary yang disimpan di database
+    const imageUrl = menu.image ? menu.image : "default-image.jpg"; // Jika gambar ada, gunakan URL dari Cloudinary
+
+    // Mengembalikan data menu beserta URL gambar
+    res.status(200).json({
+      name: menu.name,
+      category: menu.category,
+      price: menu.price,
+      description: menu.description,
+      image: imageUrl, // URL gambar dari Cloudinary
+    });
+  } catch (err) {
+    console.error("Database error (fetch menu by ID):", err);
+    res.status(500).json({ message: "Failed to fetch menu" });
   }
 });
 
