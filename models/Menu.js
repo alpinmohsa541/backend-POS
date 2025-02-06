@@ -22,7 +22,7 @@ const menuSchema = new mongoose.Schema(
     image: {
       type: String,
       default: "/assets/default-image.jpg", // Gambar default jika tidak ada
-    }, // Path gambar
+    }, // Path gambar yang berisi URL dari Cloudinary
     is_deleted: {
       type: Boolean,
       default: false,
