@@ -43,25 +43,45 @@ try {
   app.use("/api/transaction-items", require("./routes/transactionItemRoutes"));
   app.use("/api/menus", require("./routes/menuRoutes"));
   app.use("/api/users", require("./routes/userRoutes"));
+  app.use("/api/settings", require("./routes/settingRoutes"));
+  app.use("/api/register", require("./routes/registerRoutes"));
+  app.use("/api/login", require("./routes/loginRoutes"));
 
-  // Route untuk upload file ke Cloudinary
-  app.post("/api/upload", upload.single("file"), (req, res) => {
-    if (!req.file) {
-      return res.status(400).json({ message: "No file uploaded" });
+  // Route untuk upload gambar
+  app.post("/api/upload", upload.single("image"), (req, res) => {
+    try {
+      // File berhasil diupload ke Cloudinary
+      res.status(200).json({
+        message: "File uploaded successfully",
+        file: req.file, // Menampilkan informasi file yang diupload
+      });
+    } catch (error) {
+      res.status(500).json({
+        message: "Error uploading file",
+        error: error.message,
+      });
     }
-
-    // Jika file berhasil diupload ke Cloudinary
-    res.status(200).json({
-      message: "File uploaded successfully",
-      url: req.file.path, // URL file yang sudah di-upload di Cloudinary
-    });
   });
-} catch (error) {
-  console.error("Error setting up routes:", error);
-  process.exit(1);
+} catch (err) {
+  console.error("Error loading routes:", err.message);
+  process.exit(1); // Keluar jika ada error saat load routes
 }
 
-// Start server
+// Default route
+app.get("/", (req, res) => {
+  res.send("POS Backend is running...");
+});
+
+// Global error handler untuk menangani error yang tidak tertangani
+app.use((err, req, res, next) => {
+  console.error("Global error:", err.stack);
+  res.status(500).json({
+    message: "Internal Server Error",
+    error: err.message,
+  });
+});
+
+// Mulai server
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(`Server is running on http://localhost:${PORT}`);
 });
