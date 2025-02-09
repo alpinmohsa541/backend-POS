@@ -6,7 +6,7 @@ const transactionGroupSchema = new mongoose.Schema({
   order_number: { type: String, required: true }, // Nomor pesanan
   transaction_type: { type: String, required: true }, // Jenis transaksi
   customer_name: { type: String, required: true }, // Nama pelanggan
-  table: { type: String }, // Nomor meja
+  table: { type: String }, // Nomor meja (opsional)
   subtotal_group: { type: Number, required: true }, // Subtotal transaksi
   tax: { type: Number, required: true }, // Pajak
   total: { type: Number, required: true }, // Total transaksi

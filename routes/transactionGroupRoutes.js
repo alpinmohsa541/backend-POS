@@ -1,28 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const mongoose = require("mongoose");
-
-// Definisikan schema untuk transaction group
-const transactionGroupSchema = new mongoose.Schema({
-  user_id: { type: mongoose.Schema.Types.ObjectId, required: true }, // ID pengguna
-  order_number: { type: String, required: true }, // Nomor pesanan
-  transaction_type: { type: String, required: true }, // Jenis transaksi
-  customer_name: { type: String, required: true }, // Nama pelanggan
-  table: { type: String }, // Nomor meja
-  subtotal_group: { type: Number, required: true }, // Subtotal transaksi
-  tax: { type: Number, required: true }, // Pajak
-  total: { type: Number, required: true }, // Total transaksi
-  status: { type: String, required: true }, // Status transaksi
-  cash: { type: Number, required: true }, // Uang tunai yang dibayar
-  cashback: { type: Number, required: true }, // Kembalian
-  created_at: { type: Date, default: Date.now }, // Tanggal transaksi
-});
-
-// Buat model berdasarkan schema
-const TransactionGroup = mongoose.model(
-  "TransactionGroup",
-  transactionGroupSchema
-);
+const TransactionGroup = require("../models/TransactionGroup"); // Import model TransactionGroup
 
 // API untuk mendapatkan semua transaction group
 router.get("/", async (req, res) => {
@@ -35,7 +13,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-// API untuk membuat transaction group baru
+// API untuk membuat transaction group baru tanpa validasi input
 router.post("/", async (req, res) => {
   const {
     user_id,
@@ -51,26 +29,11 @@ router.post("/", async (req, res) => {
     cashback,
   } = req.body;
 
-  try {
-    // Validasi input
-    if (
-      !user_id ||
-      !order_number ||
-      !transaction_type ||
-      !customer_name ||
-      !subtotal_group ||
-      !tax ||
-      !total ||
-      !status ||
-      !cash ||
-      !cashback
-    ) {
-      return res
-        .status(400)
-        .json({ message: "All required fields must be filled" });
-    }
+  // Log incoming request data
+  console.log("Received Data:", req.body);  // Log data yang diterima
 
-    // Buat transaksi baru
+  try {
+    // Buat transaksi baru tanpa validasi input
     const newTransactionGroup = new TransactionGroup({
       user_id,
       order_number,
