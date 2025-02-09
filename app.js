@@ -35,11 +35,7 @@ mongoose
 
 // Routes dengan prefix /api
 try {
-  // Daftar routes API yang dipakai di backend
-  app.use(
-    "/api/transaction-groups",
-    require("./routes/transactionGroupRoutes")
-  );
+  app.use("/api/transaction-groups", require("./routes/transactionGroupRoutes"));
   app.use("/api/transaction-items", require("./routes/transactionItemRoutes"));
   app.use("/api/menus", require("./routes/menuRoutes"));
   app.use("/api/users", require("./routes/userRoutes"));
