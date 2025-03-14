@@ -58,9 +58,10 @@ router.post("/", upload.single("image"), async (req, res) => {
 router.delete("/:id", async (req, res) => {
   const { id } = req.params; // Mengambil menu_id dari parameter URL
   try {
+    // Mengubah status 'is_deleted' menjadi true
     const deletedMenu = await Menu.findByIdAndUpdate(
       id,
-      { is_deleted: true }, // Mengubah status is_deleted menjadi true
+      { is_deleted: true }, // Status diubah menjadi true (soft delete)
       { new: true } // Mengembalikan data yang telah diperbarui
     );
 
@@ -68,9 +69,11 @@ router.delete("/:id", async (req, res) => {
       return res.status(404).json({ message: "Menu not found" });
     }
 
+    // Jika berhasil, kirim respons sukses
     res.status(200).json({ message: "Menu deleted successfully" });
   } catch (err) {
     console.error("Database error (delete menu):", err);
+    // Jika ada kesalahan pada database, kirim respons gagal
     res.status(500).json({ message: "Failed to delete menu" });
   }
 });
