@@ -77,7 +77,6 @@ router.delete("/:id", async (req, res) => {
     res.status(500).json({ message: "Failed to delete menu" });
   }
 });
-
 // API untuk mengedit menu berdasarkan menu_id
 router.put("/:id", upload.single("image"), async (req, res) => {
   const { id } = req.params; // Mengambil menu_id dari parameter URL
