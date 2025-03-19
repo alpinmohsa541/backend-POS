@@ -54,12 +54,16 @@ router.post("/", upload.single("image"), async (req, res) => {
   }
 });
 
-// API untuk menghapus menu secara permanen
+// API untuk menghapus menu (mengubah status is_deleted menjadi true)
 router.delete("/:id", async (req, res) => {
   const { id } = req.params; // Mengambil menu_id dari parameter URL
   try {
-    // Menghapus data menu secara permanen
-    const deletedMenu = await Menu.findByIdAndDelete(id);
+    // Mengubah status 'is_deleted' menjadi true
+    const deletedMenu = await Menu.findByIdAndUpdate(
+      id,
+      { is_deleted: true }, // Status diubah menjadi true (soft delete)
+      { new: true } // Mengembalikan data yang telah diperbarui
+    );
 
     if (!deletedMenu) {
       return res.status(404).json({ message: "Menu not found" });
@@ -73,7 +77,6 @@ router.delete("/:id", async (req, res) => {
     res.status(500).json({ message: "Failed to delete menu" });
   }
 });
-
 // API untuk mengedit menu berdasarkan menu_id
 router.put("/:id", upload.single("image"), async (req, res) => {
   const { id } = req.params; // Mengambil menu_id dari parameter URL
